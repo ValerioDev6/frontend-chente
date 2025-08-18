@@ -2,7 +2,7 @@
 
 import { getCurrentUser, signin, signout, signup } from '@/app/services/auth';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { createContext, ReactNode, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, ReactNode, Suspense, useContext, useEffect, useRef, useState } from 'react';
 
 interface User {
   id: string;
@@ -27,14 +27,15 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+// ✅ COMPONENTE INTERNO que usa useSearchParams
+const AuthProviderInternal = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [checkComplete, setCheckComplete] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParams(); // ✅ Ahora está dentro del Suspense
   
   // ✅ CRÍTICO: Evitar múltiples redirects y verificaciones
   const redirectingRef = useRef(false);
@@ -364,6 +365,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }}>
       {children}
     </AuthContext.Provider>
+  );
+};
+
+// ✅ WRAPPER PRINCIPAL con Suspense
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  return (
+    <Suspense fallback={<div>Cargando autenticación...</div>}>
+      <AuthProviderInternal>{children}</AuthProviderInternal>
+    </Suspense>
   );
 };
 
