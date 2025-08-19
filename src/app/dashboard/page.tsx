@@ -153,7 +153,6 @@ const FiltersPanel = ({
                 </div>
                 <span>Fecha</span>
               </div>
-               {/* TODO: chente aqui */}
               {/* <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full font-medium">Backend</span> */}
             </label>
             <input
@@ -180,7 +179,6 @@ const FiltersPanel = ({
                 </div>
                 <span>Zonal</span>
               </div>
-              
               {/* <span className="text-xs px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full font-medium">Frontend</span> */}
               <span className={`text-xs px-2 py-1 rounded-full font-medium ${
                 zonales.length > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
@@ -243,59 +241,9 @@ const FiltersPanel = ({
         </div>
 
         {/* Filtros activos */}
-        {(filters.fecha || filters.zonal || filters.supervisor) && (
-          <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-slate-200">
-            <p className="text-sm font-semibold text-slate-600 mb-3">Filtros Activos:</p>
-            <div className="flex flex-wrap gap-2 sm:gap-3">
-              {filters.fecha && (
-                <span className="inline-flex items-center space-x-2 px-3 py-2 bg-blue-50 border border-blue-200 text-blue-800 rounded-full text-xs sm:text-sm font-medium">
-                  <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                  </svg>
-                  <span>{filters.fecha}</span>
-                  {/* <span className="text-xs bg-blue-200 px-1 rounded">Backend</span> */}
-                </span>
-              )}
-              {filters.zonal && (
-                <span className="inline-flex items-center space-x-2 px-3 py-2 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-full text-xs sm:text-sm font-medium">
-                  <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                  </svg>
-                  <span>{filters.zonal}</span>
-                  {/* <span className="text-xs bg-emerald-200 px-1 rounded">Frontend</span> */}
-                </span>
-              )}
-              {filters.supervisor && (
-                <span className="inline-flex items-center space-x-2 px-3 py-2 bg-purple-50 border border-purple-200 text-purple-800 rounded-full text-xs sm:text-sm font-medium">
-                  <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                  </svg>
-                  <span>{filters.supervisor}</span>
-                  {/* <span className="text-xs bg-purple-200 px-1 rounded">Frontend</span> */}
-                </span>
-              )}
-            </div>
-          </div>
-        )}
 
-        {/* Info sobre filtros */}
-        <div className="mt-4 sm:mt-6 p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-blue-50 rounded-xl border border-slate-200">
-          <div className="flex items-start space-x-3">
-            <div className="p-1 bg-blue-100 rounded-full mt-0.5 flex-shrink-0">
-              <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-              </svg>
-            </div>
-            <div className="text-xs sm:text-sm text-slate-700">
-              <p className="font-semibold mb-1">Información de Filtros:</p>
-              <p>
-                <span className="font-medium text-blue-600">Fecha</span> filtra en base de datos para mayor velocidad. 
-                <span className="font-medium text-emerald-600"> Zonal</span> y 
-                <span className="font-medium text-purple-600"> Supervisor</span> filtran datos ya cargados en tiempo real.
-              </p>
-            </div>
-          </div>
-        </div>
+
+
       </div>
     </div>
   );
@@ -447,7 +395,7 @@ const StatsGrid = ({ stats, zonales, supervisores }: {
 }) => {
   const statsData = [
     {
-      title: "Total Vendedores",
+      title: "HC-Venta",
       value: stats.totalVendedores,
       subtitle: "Vendedores activos",
       icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z",
@@ -788,9 +736,9 @@ export default function DashboardPage() {
                           </span>
                           <span className="flex items-center space-x-1">
                             <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
-                            <span className="font-medium truncate">{venta.supervisor}</span>
+                            <span className="font-medium truncate">{venta.hora_min_segundo}</span>
                           </span>
                         </div>
                       </div>
