@@ -610,7 +610,7 @@ const ExecutiveTable = ({ data, loading }: { data: VendedorVentaResumen[], loadi
                     <p className="font-semibold text-emerald-800">{item.pedidos_distintos || 0}</p>
                   </div>
                   <div className="bg-purple-50 p-2 rounded">
-                    <p className="text-xs text-slate-500">% Cuota</p>
+                    <p className="text-xs text-slate-500">% Cobertura</p>
                     <p className="font-semibold text-purple-800">{Math.round(item.porcentaje_cuota || 0)}%</p>
                   </div>
                 </div>
@@ -647,14 +647,14 @@ const ExecutiveTable = ({ data, loading }: { data: VendedorVentaResumen[], loadi
             <tr>
               <th className="px-2 sm:px-4 py-3 sm:py-4 text-left text-xs font-bold text-slate-700 uppercase whitespace-nowrap">Zonal</th>
               <th className="px-2 sm:px-4 py-3 sm:py-4 text-left text-xs font-bold text-slate-700 uppercase whitespace-nowrap">Supervisor</th>
-              <th className="px-2 sm:px-3 py-3 sm:py-4 text-right text-xs font-bold text-slate-700 uppercase">QVDD</th>
-              <th className="px-2 sm:px-3 py-3 sm:py-4 text-right text-xs font-bold text-slate-700 uppercase hidden md:table-cell">QVDD Comis</th>
-              <th className="px-2 sm:px-3 py-3 sm:py-4 text-right text-xs font-bold text-slate-700 uppercase hidden lg:table-cell">QVDD Plan</th>
-              <th className="px-2 sm:px-3 py-3 sm:py-4 text-right text-xs font-bold text-slate-700 uppercase">HC-Venta</th>
+              <th className="px-2 sm:px-3 py-3 sm:py-4 text-right text-xs font-bold text-slate-700 uppercase">Q VDD</th>
+              <th className="px-2 sm:px-3 py-3 sm:py-4 text-right text-xs font-bold text-slate-700 uppercase hidden md:table-cell">Q Comis</th>
+              <th className="px-2 sm:px-3 py-3 sm:py-4 text-right text-xs font-bold text-slate-700 uppercase hidden lg:table-cell">Q Plan</th>
+              <th className="px-2 sm:px-3 py-3 sm:py-4 text-right text-xs font-bold text-slate-700 uppercase">HC Venta</th>
               <th className="px-2 sm:px-3 py-3 sm:py-4 text-right text-xs font-bold text-slate-700 uppercase hidden sm:table-cell">Ventas</th>
               <th className="px-2 sm:px-3 py-3 sm:py-4 text-right text-xs font-bold text-slate-700 uppercase hidden xl:table-cell">Cuota</th>
-              <th className="px-2 sm:px-3 py-3 sm:py-4 text-right text-xs font-bold text-slate-700 uppercase">% HC</th>
-              <th className="px-2 sm:px-3 py-3 sm:py-4 text-right text-xs font-bold text-slate-700 uppercase hidden md:table-cell">% Cuota</th>
+              <th className="px-2 sm:px-3 py-3 sm:py-4 text-right text-xs font-bold text-slate-700 uppercase">% HC Vta.</th>
+              <th className="px-2 sm:px-3 py-3 sm:py-4 text-right text-xs font-bold text-slate-700 uppercase hidden md:table-cell">% Cobertura</th>
               <th className="px-2 sm:px-4 py-3 sm:py-4 text-left text-xs font-bold text-slate-700 uppercase hidden lg:table-cell">Comentarios</th>
             </tr>
           </thead>
