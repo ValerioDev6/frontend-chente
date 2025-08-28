@@ -1,784 +1,324 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/app/context/AuthContext';
-import { 
-  ReportsService,
-  VendedorVentaResumen,
-  DetalleVenta,
-  ReportsFilters,
-  ApiError
-} from '@/app/services/reports';
 
-interface DashboardStats {
-  totalVendedores: number;
-  totalVentas: number;
-  totalQvdd: number; // Nuevo campo para estadísticas
-  PctQvdd: number
-}
+// Definición de las opciones de navegación
+const dashboardOptions = [
+  {
+    id: 'informe',
+    title: 'Informes',
+    subtitle: 'Reportes y análisis de ventas',
+    description: 'Consulta reportes detallados, estadísticas de vendedores y análisis de rendimiento por zonas.',
+    icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
+    route: '/dashboard/informe',
+    gradient: 'from-blue-500 to-cyan-600',
+    bgGradient: 'from-blue-50/80 via-cyan-50/60 to-blue-100/80',
+    borderColor: 'border-blue-200/60',
+    hoverShadow: 'hover:shadow-blue-500/20'
+  },
+  {
+    id: 'cuotas',
+    title: 'Cuotas',
+    subtitle: 'Gestión de objetivos y metas',
+    description: 'Administra cuotas de ventas, seguimiento de objetivos y evaluación del cumplimiento de metas.',
+    icon: 'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.196-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z',
+    route: '/dashboard/feedback',
+    gradient: 'from-emerald-500 to-teal-600',
+    bgGradient: 'from-emerald-50/80 via-teal-50/60 to-emerald-100/80',
+    borderColor: 'border-emerald-200/60',
+    hoverShadow: 'hover:shadow-emerald-500/20'
+  },
+  {
+    id: 'supervisores',
+    title: 'Supervisores',
+    subtitle: 'Gestión de equipos y personal',
+    description: 'Administra supervisores, equipos de ventas, asignaciones zonales y estructura organizacional.',
+    icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z',
+    route: '/dashboard/supervisores',
+    gradient: 'from-purple-500 to-indigo-600',
+    bgGradient: 'from-purple-50/80 via-indigo-50/60 to-purple-100/80',
+    borderColor: 'border-purple-200/60',
+    hoverShadow: 'hover:shadow-purple-500/20'
+  }
+];
 
-interface FrontendFilters {
-  fecha?: string;
-  zonal?: string;
-  supervisor?: string;
-}
-
-const isApiError = (response: any): response is ApiError => {
-  return response && response.success === false && 'error' in response;
-};
-
-// Loading component simplificado
-const DataLoadingSpinner = ({ text = "Cargando datos..." }: { text?: string }) => (
-  <div className="p-8 sm:p-12 text-center">
-    <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-4 border-slate-300 border-t-blue-600 mx-auto mb-4"></div>
-    <p className="text-slate-600 font-medium text-sm sm:text-base">{text}</p>
+// Componente de loading minimalista
+const LoadingSpinner = () => (
+  <div className="flex items-center justify-center py-20">
+    <div className="text-center space-y-4">
+      <div className="relative">
+        <div className="animate-spin rounded-full h-12 w-12 border-3 border-slate-300/50 mx-auto"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-3 border-blue-600 absolute top-0 left-1/2 transform -translate-x-1/2"></div>
+      </div>
+      <p className="text-slate-600 text-sm font-medium">Cargando dashboard...</p>
+    </div>
   </div>
 );
 
-// Panel de filtros optimizado
-const FiltersPanel = ({ 
-  filters, 
-  onFiltersChange, 
-  zonales, 
-  supervisores, 
-  loading,
-  onRefresh
-}: {
-  filters: FrontendFilters;
-  onFiltersChange: (filters: FrontendFilters) => void;
-  zonales: string[];
-  supervisores: string[];
-  loading: boolean;
-  onRefresh: () => void;
+// Componente de tarjeta de opción mejorada y responsiva
+const DashboardCard = ({ option, onClick, isLoading }: {
+  option: typeof dashboardOptions[0];
+  onClick: () => void;
+  isLoading: boolean;
 }) => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
-  
   return (
-    <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/50 p-4 sm:p-6 mb-6 sm:mb-8 shadow-xl">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 gap-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
-              <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 100 4m0-4v2m0-6V4"></path>
-              </svg>
-            </div>
-            <h2 className="text-lg sm:text-xl font-bold text-slate-800">Filtros</h2>
+    <article
+      onClick={onClick}
+      className={`
+        relative overflow-hidden cursor-pointer group
+        bg-gradient-to-br ${option.bgGradient}
+        border-2 ${option.borderColor}
+        rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8
+        shadow-lg ${option.hoverShadow}
+        transform transition-all duration-300 ease-out
+        hover:scale-102 sm:hover:scale-105 hover:shadow-xl
+        active:scale-98 
+        ${isLoading ? 'pointer-events-none opacity-70' : ''}
+        backdrop-blur-sm
+      `}
+      role="button"
+      tabIndex={0}
+      aria-label={`Acceder a ${option.title}`}
+    >
+      {/* Efecto de brillo sutil */}
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 opacity-0 group-hover:opacity-100 group-hover:translate-x-full transition-all duration-700 ease-out"></div>
+      
+      {/* Contenido principal */}
+      <div className="relative z-10">
+        {/* Header de la tarjeta */}
+        <div className="flex items-start justify-between mb-4 sm:mb-6">
+          <div className={`p-3 sm:p-4 bg-gradient-to-r ${option.gradient} rounded-xl sm:rounded-2xl shadow-lg group-hover:shadow-xl transition-all duration-300`}>
+            <svg 
+              className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 text-white" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+              strokeWidth="2"
+            >
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                d={option.icon}
+              />
+            </svg>
           </div>
           
-          <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="sm:hidden p-2 text-slate-600 hover:text-slate-800 rounded-lg hover:bg-slate-100"
-          >
+          {/* Flecha indicativa - solo visible en hover en desktop */}
+          <div className="hidden sm:block opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             <svg 
-              className={`w-5 h-5 transform transition-transform ${isCollapsed ? 'rotate-180' : ''}`} 
+              className="w-5 h-5 text-slate-400 group-hover:text-slate-600 transform group-hover:translate-x-1 transition-all duration-300" 
               fill="none" 
               stroke="currentColor" 
               viewBox="0 0 24 24"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+              <path 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                strokeWidth="2" 
+                d="M9 5l7 7-7 7"
+              />
             </svg>
-          </button>
+          </div>
         </div>
         
-        <button
-          onClick={onRefresh}
-          disabled={loading}
-          className="w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-xl font-semibold disabled:opacity-50 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
-        >
-          {loading ? (
-            <div className="flex items-center justify-center space-x-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
-              <span>Cargando...</span>
-            </div>
-          ) : (
-            <div className="flex items-center justify-center sm:justify-start space-x-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-              </svg>
-              <span>Actualizar</span>
-            </div>
-          )}
-        </button>
-      </div>
-      
-      <div className={`${isCollapsed ? 'hidden sm:block' : 'block'}`}>
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
-          {/* FECHA */}
-          <div className="space-y-3">
-            <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-              <div className="flex items-center space-x-2">
-                <div className="p-1 bg-blue-100 rounded">
-                  <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                  </svg>
-                </div>
-                <span>Fecha</span>
-              </div>
-            </label>
-            <input
-              type="date"
-              value={filters.fecha || ''}
-              onChange={(e) => onFiltersChange({ 
-                ...filters, 
-                fecha: e.target.value || undefined 
-              })}
-              className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 bg-white/80 text-sm sm:text-base"
-              disabled={loading}
-            />
-          </div>
-
-          {/* ZONAL */}
-          <div className="space-y-3">
-            <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-              <div className="flex items-center space-x-2">
-                <div className="p-1 bg-emerald-100 rounded">
-                  <svg className="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                  </svg>
-                </div>
-                <span>Zonal</span>
-              </div>
-              <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                zonales.length > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-              }`}>
-                {zonales.length}
-              </span>
-            </label>
-            <select
-              value={filters.zonal || ''}
-              onChange={(e) => onFiltersChange({ 
-                ...filters, 
-                zonal: e.target.value || undefined,
-                supervisor: undefined
-              })}
-              className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200 bg-white/80 text-sm sm:text-base"
-              disabled={loading || zonales.length === 0}
-            >
-              <option value="">Todas las zonales</option>
-              {zonales.map((zonal) => (
-                <option key={zonal} value={zonal}>{zonal}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* SUPERVISOR */}
-          <div className="space-y-3 md:col-span-2 xl:col-span-1">
-            <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-              <div className="flex items-center space-x-2">
-                <div className="p-1 bg-purple-100 rounded">
-                  <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                  </svg>
-                </div>
-                <span>Supervisor</span>
-              </div>
-              <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                supervisores.length > 0 ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-              }`}>
-                {supervisores.length}
-              </span>
-            </label>
-            <select
-              value={filters.supervisor || ''}
-              onChange={(e) => onFiltersChange({ 
-                ...filters, 
-                supervisor: e.target.value || undefined 
-              })}
-              className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-purple-500/20 focus:border-purple-500 transition-all duration-200 bg-white/80 text-sm sm:text-base"
-              disabled={loading || !filters.zonal}
-            >
-              <option value="">
-                {!filters.zonal ? 'Selecciona zonal primero' : 'Todos los supervisores'}
-              </option>
-              {supervisores.map((supervisor) => (
-                <option key={supervisor} value={supervisor}>{supervisor}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Header simplificado - solo acciones de exportación
-const ExportHeader = ({ onExportResumen, onExportDetalle, loading, counts }: {
-  onExportResumen: () => void;
-  onExportDetalle: () => void;
-  loading: boolean;
-  counts: { resumen: number; detalle: number };
-}) => {
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
-
-  return (
-    <div className="mb-6 sm:mb-8">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
-            Dashboard
-          </h1>
-          <p className="text-slate-600 text-sm sm:text-base mt-1">
-            Gestión de ventas regulares
+        {/* Contenido de texto */}
+        <div className="space-y-2 sm:space-y-3">
+          <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-800 group-hover:text-slate-900 transition-colors duration-300 leading-tight">
+            {option.title}
+          </h3>
+          
+          <p className="text-sm sm:text-base lg:text-lg font-semibold text-slate-600 group-hover:text-slate-700 transition-colors duration-300 leading-snug">
+            {option.subtitle}
+          </p>
+          
+          <p className="text-xs sm:text-sm lg:text-base text-slate-500 group-hover:text-slate-600 transition-colors duration-300 leading-relaxed line-clamp-3">
+            {option.description}
           </p>
         </div>
         
-        {/* Botón menú móvil */}
-        <div className="sm:hidden">
-          <button
-            onClick={() => setShowMobileMenu(!showMobileMenu)}
-            className="p-3 bg-white/90 backdrop-blur-sm rounded-xl border border-slate-200 shadow-lg w-full"
+        {/* Call to action */}
+        <div className="mt-4 sm:mt-6 flex items-center space-x-2 text-slate-600 group-hover:text-slate-800 transition-colors duration-300">
+          <span className="text-xs sm:text-sm font-semibold">Acceder</span>
+          <svg 
+            className="w-3 h-3 sm:w-4 sm:h-4 transform group-hover:translate-x-1 transition-transform duration-300" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+            strokeWidth="2"
           >
-            <div className="flex items-center justify-center space-x-2">
-              <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-              </svg>
-              <span className="font-medium">Exportar Datos</span>
-            </div>
-          </button>
-        </div>
-        
-        {/* Botones desktop */}
-        <div className="hidden sm:flex gap-3">
-          <button
-            onClick={onExportResumen}
-            disabled={loading || counts.resumen === 0}
-            className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-xl font-semibold disabled:opacity-50 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm"
-          >
-            <div className="flex items-center space-x-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-              </svg>
-              <span>Resumen ({counts.resumen})</span>
-            </div>
-          </button>
-          <button
-            onClick={onExportDetalle}
-            disabled={loading || counts.detalle === 0}
-            className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl font-semibold disabled:opacity-50 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm"
-          >
-            <div className="flex items-center space-x-2">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-              </svg>
-              <span>Detalle ({counts.detalle})</span>
-            </div>
-          </button>
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              d="M17 8l4 4m0 0l-4 4m4-4H3"
+            />
+          </svg>
         </div>
       </div>
       
-      {/* Menú móvil */}
-      {showMobileMenu && (
-        <div className="sm:hidden mt-4">
-          <div className="bg-white/95 backdrop-blur-sm rounded-2xl border border-slate-200 shadow-xl p-4 space-y-3">
-            <button
-              onClick={() => {
-                onExportResumen();
-                setShowMobileMenu(false);
-              }}
-              disabled={loading || counts.resumen === 0}
-              className="w-full px-4 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white rounded-xl font-semibold disabled:opacity-50 transition-all duration-200"
-            >
-              <div className="flex items-center justify-center space-x-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                </svg>
-                <span>Resumen ({counts.resumen})</span>
-              </div>
-            </button>
-            <button
-              onClick={() => {
-                onExportDetalle();
-                setShowMobileMenu(false);
-              }}
-              disabled={loading || counts.detalle === 0}
-              className="w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl font-semibold disabled:opacity-50 transition-all duration-200"
-            >
-              <div className="flex items-center justify-center space-x-2">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                </svg>
-                <span>Detalle ({counts.detalle})</span>
-              </div>
-            </button>
+      {/* Loading overlay */}
+      {isLoading && (
+        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-20 rounded-2xl sm:rounded-3xl">
+          <div className="flex flex-col items-center space-y-2">
+            <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-2 border-slate-400 border-t-transparent"></div>
+            <span className="text-xs text-slate-600">Cargando...</span>
           </div>
         </div>
       )}
-    </div>
+    </article>
   );
 };
 
-// Estadísticas optimizadas - AGREGADO QVDD
-const StatsGrid = ({ stats, zonales, supervisores }: {
-  stats: { totalVendedores: number; totalVentas: number; totalQvdd: number; PctQvdd: number };
-  zonales: string[];
-  supervisores: string[];
-}) => {
-  const statsData = [
-    {
-      title: "HC-Venta",
-      value: stats.totalVendedores,
-      subtitle: "Vendedores con ventas",
-      icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z",
-      gradient: "from-blue-500 to-blue-600",
-      textGradient: "from-blue-600 to-blue-800"
-    },
-    {
-      title: "Ventas Regulares",
-      value: stats.totalVentas,
-      subtitle: "Ventas reportadas",
-      icon: "M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z",
-      gradient: "from-emerald-500 to-emerald-600",
-      textGradient: "from-emerald-600 to-emerald-800"
-    },
-    {
-      title: "Cantidad Vendedores",
-      value: stats.totalQvdd,
-      subtitle: "Vendedores en campo",
-      icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
-      gradient: "from-indigo-500 to-indigo-600", 
-      textGradient: "from-indigo-600 to-indigo-800"
-    },
-    {
-      title: "Zonales",
-      value: zonales.length,
-      subtitle: "Zonas operativas",
-      icon: "M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z",
-      gradient: "from-purple-500 to-purple-600",
-      textGradient: "from-purple-600 to-purple-800"
-    }
-  ];
-
-  return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
-      {statsData.map((stat, index) => (
-        <div key={index} className="bg-white/90 backdrop-blur-sm p-4 sm:p-6 rounded-2xl border border-slate-200/50 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex-1 mb-3 lg:mb-0">
-              <p className="text-xs sm:text-sm font-semibold text-slate-600 uppercase tracking-wide mb-1 sm:mb-2">
-                {stat.title}
-              </p>
-              <p className={`text-2xl sm:text-3xl font-bold bg-gradient-to-r ${stat.textGradient} bg-clip-text text-transparent`}>
-                {stat.value.toLocaleString()}
-              </p>
-              <p className="text-xs sm:text-sm text-slate-500 mt-1 hidden sm:block">
-                {stat.subtitle}
-              </p>
-            </div>
-            <div className={`p-2 sm:p-3 bg-gradient-to-br ${stat.gradient} rounded-2xl shadow-lg self-center lg:self-auto`}>
-              <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={stat.icon}></path>
-              </svg>
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-// Componente de card para la última venta
-const UltimaVentaCard = ({ venta }: { venta: DetalleVenta }) => (
-  <div className="p-4 sm:p-6 bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 border-2 border-amber-200 rounded-2xl shadow-xl mb-4 relative overflow-hidden">
-    {/* Badge de "Última Venta" */}
-    <div className="absolute -top-2 -right-2">
-      <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg transform rotate-12">
-        🔥 ÚLTIMA VENTA
-      </div>
-    </div>
-    
-    {/* Efecto de brillo */}
-    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 opacity-30"></div>
-    
-    <div className="relative z-10">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
-        <div className="flex-1">
-          <div className="flex items-center space-x-3 mb-3">
-            <div className="p-2 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl shadow-lg">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-              </svg>
-            </div>
-            <div>
-              <h3 className="font-bold text-slate-900 text-lg">{venta.vendedor_nombre}</h3>
-              <p className="text-sm text-amber-700 font-medium">Última venta registrada del día</p>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="flex items-center space-x-2">
-              <div className="p-1.5 bg-amber-100 rounded-lg">
-                <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                </svg>
-              </div>
-              <div>
-                <p className="text-xs text-slate-600 font-medium">Zonal</p>
-                <p className="font-bold text-slate-900">{venta.zonal}</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <div className="p-1.5 bg-orange-100 rounded-lg">
-                <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                </svg>
-              </div>
-              <div>
-                <p className="text-xs text-slate-600 font-medium">Supervisor</p>
-                <p className="font-bold text-slate-900">{venta.supervisor}</p>
-              </div>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <div className="p-1.5 bg-yellow-100 rounded-lg">
-                <svg className="w-4 h-4 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-              </div>
-              <div>
-                <p className="text-xs text-slate-600 font-medium">Hora</p>
-                <p className="font-bold text-slate-900">{venta.hora_min_segundo}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="text-center sm:text-right flex-shrink-0">
-          <div className="inline-flex items-center px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-2xl font-bold shadow-2xl transform hover:scale-105 transition-all duration-200">
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-            </svg>
-            <span>#{venta.nro_pedido_orig}</span>
-          </div>
-          <p className="text-xs text-amber-700 mt-2 font-medium">Número de Pedido</p>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
-// Componente principal optimizado - sin lógica de autenticación
+// Componente principal del Dashboard
 export default function DashboardPage() {
-  const { user, logout } = useAuth(); // Solo necesitamos user para logout
-  
-  const [allVendedoresData, setAllVendedoresData] = useState<VendedorVentaResumen[]>([]);
-  const [allDetalleData, setAllDetalleData] = useState<DetalleVenta[]>([]);
-  const [filters, setFilters] = useState<FrontendFilters>({ fecha: ReportsService.getCurrentDate() });
-  const [loadingData, setLoadingData] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [navigating, setNavigating] = useState<string | null>(null);
 
-  const { filteredVendedores, filteredDetalle, zonales, supervisores, stats, ultimaVenta } = useMemo(() => {
-    const zonalesSet = new Set(allVendedoresData.map(item => item.zonal).filter(Boolean));
-    const zonalesArray = Array.from(zonalesSet).sort();
-
-    const supervisoresArray = filters.zonal 
-      ? Array.from(new Set(
-          allVendedoresData
-            .filter(item => item.zonal === filters.zonal)
-            .map(item => item.supervisor)
-            .filter(Boolean)
-        )).sort()
-      : [];
-
-    let filteredVendedoresData = allVendedoresData;
-    if (filters.zonal) {
-      filteredVendedoresData = filteredVendedoresData.filter(item => item.zonal === filters.zonal);
-    }
-    if (filters.supervisor) {
-      filteredVendedoresData = filteredVendedoresData.filter(item => item.supervisor === filters.supervisor);
-    }
-
-    let filteredDetalleData = allDetalleData;
-    if (filters.zonal) {
-      filteredDetalleData = filteredDetalleData.filter(item => item.zonal === filters.zonal);
-    }
-    if (filters.supervisor) {
-      filteredDetalleData = filteredDetalleData.filter(item => item.supervisor === filters.supervisor);
-    }
-
-    // // Ordenar por hora para obtener la última venta
-    // const sortedDetalle = [...filteredDetalleData].sort((a, b) => {
-    //   // Asumiendo que hora_min_segundo está en formato HH:MM:SS
-    //   return b.hora_min_segundo?.localeCompare(a.hora_min_segundo?);
-    // });
-    const sortedDetalle = [...filteredDetalleData].sort((a, b) => {
-      // Si ambos son undefined, son iguales
-      if (!a.hora_min_segundo && !b.hora_min_segundo) return 0;
-      
-      // Si solo a es undefined, va al final
-      if (!a.hora_min_segundo) return 1;
-      
-      // Si solo b es undefined, va al final
-      if (!b.hora_min_segundo) return -1;
-      
-      // Ambos tienen valor, comparar normalmente (orden descendente para la última venta)
-      return b.hora_min_segundo.localeCompare(a.hora_min_segundo);
-    });
-    const totalVendedores = filteredVendedoresData.reduce((sum, item) => sum + (item.vendedores_con_ventas || 0), 0);
-    const totalVentas = filteredVendedoresData.reduce((sum, item) => sum + (item.pedidos_distintos || 0), 0);
-    const totalQvdd = filteredVendedoresData.reduce((sum, item) => sum + (item.qvdd || 0), 0);
-    const PctQvdd = filteredVendedoresData.reduce((sum, item) => sum + (item.hc_venta_pct || 0), 0);
-
-    return {
-      filteredVendedores: filteredVendedoresData,
-      filteredDetalle: sortedDetalle,
-      zonales: zonalesArray,
-      supervisores: supervisoresArray,
-      stats: { totalVendedores, totalVentas, totalQvdd, PctQvdd },
-      ultimaVenta: sortedDetalle[0] || null // Primera venta del array ordenado = última del día
-    };
-  }, [allVendedoresData, allDetalleData, filters.zonal, filters.supervisor]);
-
-  const loadDashboardData = async () => {
-    if (loadingData) return;
-    
-    setLoadingData(true);
-    setError(null);
-    
-    try {
-      const backendFilters: ReportsFilters = filters.fecha ? { fecha: filters.fecha } : {};
-      
-      const [resumenResponse, detalleResponse] = await Promise.all([
-        ReportsService.getVendedoresVentas(backendFilters),
-        ReportsService.getDetalleVentas({ ...backendFilters, limit: 200, offset: 0 })
-      ]);
-
-      if (!isApiError(resumenResponse)) {
-        setAllVendedoresData(resumenResponse.data || []);
-      } else {
-        setError(`Error cargando resumen: ${resumenResponse.error}`);
-      }
-
-      if (!isApiError(detalleResponse)) {
-        setAllDetalleData(detalleResponse.data || []);
-      }
-      
-    } catch (err: any) {
-      if (err.response?.status === 401) {
-        logout();
-      } else {
-        setError(`Error: ${err.message}`);
-      }
-    } finally {
-      setLoadingData(false);
-    }
-  };
-
+  // Carga inicial optimizada
   useEffect(() => {
-    loadDashboardData();
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 800);
+
+    return () => clearTimeout(timer);
   }, []);
 
-  useEffect(() => {
-    const timer = setTimeout(loadDashboardData, 500);
-    return () => clearTimeout(timer);
-  }, [filters.fecha]);
-
-  const exportToCSV = async (type: 'resumen' | 'detalle') => {
-    try {
-      const data = type === 'resumen' ? filteredVendedores : filteredDetalle;
-      const filename = `${type}_ventas_${filters.fecha || 'todas'}_${filters.zonal || 'todas_zonales'}`;
-      await ReportsService.exportToCSV(data, filename);
-    } catch (err: any) {
-      setError(`Error exportando: ${err.message}`);
+  // Función para manejar navegación con feedback visual
+  const handleNavigation = async (option: typeof dashboardOptions[0]) => {
+    if (navigating) return; // Prevenir múltiples clics
+    
+    setNavigating(option.id);
+    
+    // Feedback táctil en móviles si está disponible
+    if (navigator.vibrate) {
+      navigator.vibrate(50);
     }
+    
+    // Delay para mostrar la animación
+    await new Promise(resolve => setTimeout(resolve, 400));
+    
+    router.push(option.route);
   };
 
+  // Función para obtener el saludo basado en la hora
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Buenos días';
+    if (hour < 18) return 'Buenas tardes';
+    return 'Buenas noches';
+  };
+
+  // Función para formatear la fecha de manera responsiva
+  const getCurrentDate = () => {
+    const now = new Date();
+    const isSmallScreen = typeof window !== 'undefined' && window.innerWidth < 640;
+    
+    if (isSmallScreen) {
+      return now.toLocaleDateString('es-ES', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric'
+      });
+    }
+    
+    return now.toLocaleDateString('es-ES', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const [currentDate, setCurrentDate] = useState('');
+
+  useEffect(() => {
+    setCurrentDate(getCurrentDate());
+    
+    const handleResize = () => {
+      setCurrentDate(getCurrentDate());
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-slate-50 to-blue-50 p-3 sm:p-4 lg:p-6">
-      <ExportHeader
-        onExportResumen={() => exportToCSV('resumen')}
-        onExportDetalle={() => exportToCSV('detalle')}
-        loading={loadingData}
-        counts={{ resumen: filteredVendedores.length, detalle: filteredDetalle.length }}
-      />
-
-      {error && (
-        <div className="bg-gradient-to-r from-red-50 to-red-100 border-l-4 border-red-500 p-4 sm:p-6 mb-4 sm:mb-6 rounded-xl shadow-lg">
-          <div className="flex items-start">
-            <div className="p-2 bg-red-100 rounded-full mr-4 flex-shrink-0">
-              <svg className="w-5 h-5 sm:w-6 sm:h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-              </svg>
-            </div>
-            <div className="flex-1">
-              <h3 className="text-base sm:text-lg font-semibold text-red-800 mb-2">Error en el Sistema</h3>
-              <p className="text-sm sm:text-base text-red-700">{error}</p>
-            </div>
-            <button 
-              onClick={() => setError(null)} 
-              className="p-2 text-red-400 hover:text-red-600 hover:bg-red-200 rounded-full transition-all duration-200 flex-shrink-0"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-              </svg>
-            </button>
-          </div>
-        </div>
-      )}
-
-      <FiltersPanel
-        filters={filters}
-        onFiltersChange={setFilters}
-        zonales={zonales}
-        supervisores={supervisores}
-        loading={loadingData}
-        onRefresh={loadDashboardData}
-      />
-
-      <StatsGrid stats={stats} zonales={zonales} supervisores={supervisores} />
-
-      {/* Tablas responsivas */}
-      <div className="space-y-6 lg:space-y-0 lg:grid lg:grid-cols-2 lg:gap-8">
-        {/* Resumen Table - AGREGADA COLUMNA QVDD */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/50 shadow-xl overflow-hidden">
-          <div className="p-4 sm:p-6 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-blue-50">
-            <h2 className="text-lg sm:text-xl font-bold text-slate-800 mb-1">Ventas por Supervisor</h2>
-            <p className="text-sm sm:text-base text-slate-600">
-              {filteredVendedores.length} de {allVendedoresData.length} registros
-            </p>
-          </div>
-          
-          <div className="overflow-auto max-h-80 sm:max-h-96">
-            {loadingData ? (
-              <DataLoadingSpinner text="Cargando resumen..." />
-            ) : filteredVendedores.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-gradient-to-r from-slate-100 to-slate-200 sticky top-0">
-                    <tr>
-                      <th className="px-2 sm:px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase">Zonal</th>
-                      <th className="px-2 sm:px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase">Supervisor</th>
-                      <th className="px-2 sm:px-3 py-3 text-right text-xs font-bold text-slate-600 uppercase">HC</th>
-                      <th className="px-2 sm:px-3 py-3 text-right text-xs font-bold text-slate-600 uppercase">Ventas</th>
-                      <th className="px-2 sm:px-3 py-3 text-right text-xs font-bold text-slate-600 uppercase">QVDD</th>
-                      <th className="px-2 sm:px-3 py-3 text-right text-xs font-bold text-slate-600 uppercase">% HC VTA.</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200">
-                    {filteredVendedores.map((item, index) => (
-                      <tr key={index} className="hover:bg-gradient-to-r hover:from-slate-50 hover:to-blue-50 transition-colors duration-200">
-                        <td className="px-2 sm:px-4 py-3 font-bold text-slate-900 text-xs sm:text-sm">{item.zonal}</td>
-                        <td className="px-2 sm:px-4 py-3 font-medium text-slate-700 text-xs sm:text-sm">{item.supervisor}</td>
-                        <td className="px-2 sm:px-3 py-3 text-right">
-                          <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-bold">
-                            {item.vendedores_con_ventas}
-                          </span>
-                        </td>
-                        <td className="px-2 sm:px-3 py-3 text-right">
-                          <span className="px-2 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-bold">
-                            {item.pedidos_distintos}
-                          </span>
-                        </td>
-                        <td className="px-2 sm:px-3 py-3 text-right">
-                          <span className="px-2 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs font-bold">
-                            {item.qvdd || 0}
-                          </span>
-                        </td>
-                        <td className="px-2 sm:px-3 py-3 text-right">
-                          <span className="px-2 py-1 bg-purple-100 text-indigo-800 rounded-full text-xs font-bold">
-                            {Math.round(item.hc_venta_pct || 0)}%
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="p-8 sm:p-12 text-center">
-                <div className="p-4 sm:p-6 bg-slate-100 rounded-2xl inline-block mb-4">
-                  <svg className="w-8 h-8 sm:w-12 sm:h-12 text-slate-400 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 009.586 13H7"></path>
-                  </svg>
-                </div>
-                <p className="text-slate-600 font-medium mb-2 text-sm sm:text-base">No hay datos disponibles</p>
-                <p className="text-xs sm:text-sm text-slate-500">Intenta cambiar los filtros o la fecha</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Detalle Cards - CON ÚLTIMA VENTA DESTACADA */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-2xl border border-slate-200/50 shadow-xl overflow-hidden">
-          <div className="p-4 sm:p-6 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-emerald-50">
-            <h2 className="text-lg sm:text-xl font-bold text-slate-800 mb-1">Detalle de Ventas</h2>
-            <p className="text-sm sm:text-base text-slate-600">
-              {filteredDetalle.length} de {allDetalleData.length} registros
-            </p>
-          </div>
-          
-          <div className="overflow-auto max-h-80 sm:max-h-96 p-3 sm:p-4">
-            {loadingData ? (
-              <DataLoadingSpinner text="Cargando detalles..." />
-            ) : filteredDetalle.length > 0 ? (
-              <div className="space-y-3 sm:space-y-4">
-                {/* Mostrar la última venta destacada si existe */}
-                {ultimaVenta && (
-                  <UltimaVentaCard venta={ultimaVenta} />
-                )}
-
-                {/* Mostrar el resto de ventas (excluyendo la primera que ya se mostró como última) */}
-                {filteredDetalle.slice(ultimaVenta ? 1 : 0).map((venta, index) => (
-                  <div key={index + 1} className="p-3 sm:p-4 bg-gradient-to-r from-slate-50 to-white rounded-xl border border-slate-200 hover:shadow-lg transition-all duration-300 transform hover:scale-[1.02]">
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2 sm:space-x-3 mb-2">
-                          <div className="p-1.5 sm:p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex-shrink-0">
-                            <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                            </svg>
-                          </div>
-                          <h3 className="font-bold text-slate-900 text-sm sm:text-base truncate">{venta.vendedor_nombre}</h3>
-                        </div>
-                        <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-slate-600">
-                          <span className="flex items-center space-x-1">
-                            <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                            </svg>
-                            <span className="font-medium">{venta.zonal}</span>
-                          </span>
-                          <span className="flex items-center space-x-1">
-                            <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            <span className="font-medium truncate">{venta.supervisor}</span>
-                          </span>
-                          <span className="flex items-center space-x-1">
-                            <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            <span className="font-medium truncate">{venta.hora_min_segundo}</span>
-                          </span>
-                        </div>
-                      </div>
-                      <div className="text-right flex-shrink-0">
-                        <span className="inline-flex items-center px-2 sm:px-3 py-1 sm:py-2 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-full text-xs sm:text-sm font-bold shadow-lg">
-                          <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                          </svg>
-                          #{venta.nro_pedido_orig}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="p-8 text-center">
-                <div className="p-4 sm:p-6 bg-slate-100 rounded-2xl inline-block mb-4">
-                  <svg className="w-8 h-8 sm:w-12 sm:h-12 text-slate-400 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                  </svg>
-                </div>
-                <p className="text-slate-600 font-medium mb-2 text-sm sm:text-base">No hay ventas disponibles</p>
-                <p className="text-xs sm:text-sm text-slate-500">Intenta cambiar los filtros o la fecha</p>
-              </div>
-            )}
-          </div>
+    <div className="min-h-full">
+      {/* Saludo principal - Sin posición fija para evitar conflictos */}
+      <div className="mb-8 sm:mb-12">
+        <div className="text-center sm:text-left">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 bg-clip-text text-transparent mb-2 sm:mb-3">
+            {getGreeting()}, {user?.displayName || user?.username || 'Usuario'}
+          </h1>
+          <p className="text-slate-600 text-sm sm:text-base lg:text-lg capitalize">
+            {currentDate}
+          </p>
         </div>
       </div>
+
+      {/* Introducción */}
+      <div className="text-center mb-8 sm:mb-12 lg:mb-16">
+        <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-slate-800 mb-3 sm:mb-4 lg:mb-6 leading-tight">
+          Panel de Control
+        </h2>
+        <p className="text-base sm:text-lg lg:text-xl text-slate-600 max-w-4xl mx-auto leading-relaxed px-4 sm:px-0">
+          Selecciona una opción para acceder a las diferentes funcionalidades del sistema de gestión de ventas.
+        </p>
+      </div>
+
+      {/* Grid de opciones - Completamente responsivo */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-16 lg:mb-20">
+        {dashboardOptions.map((option) => (
+          <DashboardCard
+            key={option.id}
+            option={option}
+            onClick={() => handleNavigation(option)}
+            isLoading={navigating === option.id}
+          />
+        ))}
+      </div>
+
+      {/* Footer informativo - Mejorado y responsivo */}
+      <div className="text-center">
+        <div className="bg-white/60 backdrop-blur-sm rounded-xl sm:rounded-2xl border border-slate-200/60 p-4 sm:p-6 lg:p-8 shadow-lg max-w-2xl mx-auto">
+          <div className="flex items-center justify-center space-x-3 mb-3">
+            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
+              <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <h3 className="text-base sm:text-lg lg:text-xl font-bold text-slate-800">
+              Sistema de Gestión de Ventas
+            </h3>
+          </div>
+          <p className="text-xs sm:text-sm lg:text-base text-slate-600 leading-relaxed">
+            Versión 1.0 - Desarrollado para optimizar la gestión y seguimiento de ventas regulares
+          </p>
+        </div>
+      </div>
+
+      {/* Estilos adicionales para mejorar la responsividad */}
+      <style jsx>{`
+        @media (max-width: 640px) {
+          .hover\\:scale-102:hover {
+            transform: scale(1.02);
+          }
+        }
+        
+        .line-clamp-3 {
+          display: -webkit-box;
+          -webkit-line-clamp: 3;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+      `}</style>
     </div>
   );
 }

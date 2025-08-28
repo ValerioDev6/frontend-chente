@@ -479,3 +479,15 @@ export type {
   SummaryStats,
   QueryInfo
 };
+
+// // ACTUALIZAR: VendedorVentaResumen según backend v2.0
+// interface VendedorVentaResumen {
+//   zonal: string;
+//   supervisor: string;
+//   qvdd: number;
+//   vendedores_con_ventas: number;
+//   pedidos_distintos: number;
+//   cuota_diaria: number;
+//   porcentaje_hc_venta: number;
+//   porcentaje_cumplimiento_cuota: number;
+// }
