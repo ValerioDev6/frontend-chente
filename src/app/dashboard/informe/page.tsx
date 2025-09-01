@@ -34,8 +34,8 @@ const exportToExcel = (data: VendedorVentaResumen[], filename: string) => {
     { order: 8, key: 'cuota_diaria', excelName: 'Cuota' },
     { order: 9, key: 'porcentaje_cuota', excelName: '% Cobertura' },
     { order: 10, key: 'hc_venta_pct', excelName: '% HC con Venta' },
-    { order: 11, key: 'comentarios_supervisor', excelName: 'Comentarios Supervisor' },
-    { order: 12, key: 'comentarios_jefe', excelName: 'Comentarios Jefe' }
+    { order: 11, key: 'comentarios_supervisor', excelName: 'Comentarios Evaluación' },
+    { order: 12, key: 'comentarios_jefe', excelName: 'Comentarios Cierre' }
   ];
 
   // Ordenar por el orden especificado
@@ -763,13 +763,13 @@ const ExecutiveTable = ({ data, loading }: { data: VendedorVentaResumen[], loadi
                     <div className="space-y-1">
                       {item.comentarios_jefe && (
                         <div className="text-xs">
-                          <span className="font-semibold text-blue-600">Jefe:</span>
+                          <span className="font-semibold text-blue-600">Cierre:</span>
                           <span className="text-slate-600 ml-1">{item.comentarios_jefe}</span>
                         </div>
                       )}
                       {item.comentarios_supervisor && (
                         <div className="text-xs">
-                          <span className="font-semibold text-purple-600">Supervisor:</span>
+                          <span className="font-semibold text-purple-600">Evaluación:</span>
                           <span className="text-slate-600 ml-1">{item.comentarios_supervisor}</span>
                         </div>
                       )}
@@ -924,13 +924,13 @@ const ExecutiveTable = ({ data, loading }: { data: VendedorVentaResumen[], loadi
                     <div className="space-y-1">
                       {item.comentarios_jefe && (
                         <div className="text-xs">
-                          <span className="font-semibold text-blue-600">Jefe:</span>
+                          <span className="font-semibold text-blue-600">Cierre:</span>
                           <span className="text-slate-600 ml-1">{item.comentarios_jefe}</span>
                         </div>
                       )}
                       {item.comentarios_supervisor && (
                         <div className="text-xs">
-                          <span className="font-semibold text-purple-600">Supervisor:</span>
+                          <span className="font-semibold text-purple-600">Evaluación:</span>
                           <span className="text-slate-600 ml-1">{item.comentarios_supervisor}</span>
                         </div>
                       )}

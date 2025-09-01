@@ -391,7 +391,7 @@ const EditarFeedbackModal = ({
 
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Comentarios del Supervisor
+                Comentarios Evaluación inicial
               </label>
               <textarea
                 value={formData.comentarios_supervisor || ''}
@@ -419,7 +419,7 @@ const EditarFeedbackModal = ({
 
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Comentarios del Jefe
+                Retroalimentación Cierre de Ventas
               </label>
               <textarea
                 value={formData.comentarios_jefe || ''}
@@ -429,7 +429,7 @@ const EditarFeedbackModal = ({
                 })}
                 rows={3}
                 className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-slate-200 rounded-lg sm:rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 text-sm sm:text-base"
-                placeholder="Ingresa comentarios del jefe..."
+                placeholder="Ingresa comentarios del supervisor..."
                 disabled={loading}
                 maxLength={500}
               />
@@ -830,7 +830,7 @@ export default function SeguimientoPage() {
                           </div>
                           
                           <div className="flex items-center justify-between">
-                            <span className="text-slate-600">C. Sup:</span>
+                            <span className="text-slate-600">C. Sup 0:</span>
                             {item.comentarios_supervisor && item.comentarios_supervisor.trim() ? (
                               <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium">Sí</span>
                             ) : (
@@ -839,7 +839,7 @@ export default function SeguimientoPage() {
                           </div>
                           
                           <div className="flex items-center justify-between">
-                            <span className="text-slate-600">C. Jefe:</span>
+                            <span className="text-slate-600">C. Sup 1:</span>
                             {item.comentarios_jefe && item.comentarios_jefe.trim() ? (
                               <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium">Sí</span>
                             ) : (
@@ -861,8 +861,8 @@ export default function SeguimientoPage() {
                       <th className="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Supervisor</th>
                       <th className="px-3 py-3 text-right text-xs font-bold text-slate-600 uppercase tracking-wider">Cuota</th>
                       <th className="px-3 py-3 text-center text-xs font-bold text-slate-600 uppercase tracking-wider">Cumpl.</th>
-                      <th className="px-3 py-3 text-center text-xs font-bold text-slate-600 uppercase tracking-wider">C. Sup.</th>
-                      <th className="px-3 py-3 text-center text-xs font-bold text-slate-600 uppercase tracking-wider">C. Jefe</th>
+                      <th className="px-3 py-3 text-center text-xs font-bold text-slate-600 uppercase tracking-wider">C. Sup. 0</th>
+                      <th className="px-3 py-3 text-center text-xs font-bold text-slate-600 uppercase tracking-wider">C. Sup. 1</th>
                       <th className="px-3 py-3 text-center text-xs font-bold text-slate-600 uppercase tracking-wider">Acciones</th>
                     </tr>
                   </thead>
@@ -1037,7 +1037,7 @@ export default function SeguimientoPage() {
               
               <div className="text-center">
                 <div className="p-2 sm:p-3 bg-white rounded-lg shadow-sm">
-                  <p className="text-slate-600 font-medium mb-1 text-xs sm:text-sm">Com. Supervisor</p>
+                  <p className="text-slate-600 font-medium mb-1 text-xs sm:text-sm">Com. Inicial</p>
                   <p className="text-lg sm:text-2xl font-bold text-purple-600">{stats.conComentariosSup}</p>
                   <p className="text-xs text-slate-500">
                     {stats.total > 0 ? Math.round((stats.conComentariosSup / stats.total) * 100) : 0}%
@@ -1047,7 +1047,7 @@ export default function SeguimientoPage() {
               
               <div className="text-center">
                 <div className="p-2 sm:p-3 bg-white rounded-lg shadow-sm">
-                  <p className="text-slate-600 font-medium mb-1 text-xs sm:text-sm">Com. Jefe</p>
+                  <p className="text-slate-600 font-medium mb-1 text-xs sm:text-sm">Retroalimentación</p>
                   <p className="text-lg sm:text-2xl font-bold text-orange-600">{stats.conComentariosJefe}</p>
                   <p className="text-xs text-slate-500">
                     {stats.total > 0 ? Math.round((stats.conComentariosJefe / stats.total) * 100) : 0}%
