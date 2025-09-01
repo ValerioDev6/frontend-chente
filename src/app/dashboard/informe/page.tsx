@@ -16,7 +16,7 @@ import {
 
 interface FrontendFilters {
   fecha?: string;
-  zonal?: string;
+  zonales?: string[]; // Cambio: ahora es un array para múltiples zonales
   supervisor?: string;
 }
 
@@ -127,7 +127,126 @@ const DataLoadingSpinner = ({ text = "Cargando datos..." }: { text?: string }) =
   </div>
 );
 
-// Panel de filtros mejorado con supervisores independientes - RESPONSIVO
+// Componente para el selector múltiple de zonales
+const MultiSelectZonal = ({ 
+  selectedZonales, 
+  availableZonales, 
+  onChange, 
+  loading 
+}: {
+  selectedZonales: string[];
+  availableZonales: string[];
+  onChange: (zonales: string[]) => void;
+  loading: boolean;
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const toggleZonal = (zonal: string) => {
+    if (selectedZonales.includes(zonal)) {
+      onChange(selectedZonales.filter(z => z !== zonal));
+    } else {
+      onChange([...selectedZonales, zonal]);
+    }
+  };
+
+  const selectAll = () => {
+    onChange(availableZonales);
+  };
+
+  const clearAll = () => {
+    onChange([]);
+  };
+
+  return (
+    <div className="relative">
+      {/* Button trigger */}
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        disabled={loading || availableZonales.length === 0}
+        className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-slate-200 rounded-lg sm:rounded-xl focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200 bg-white text-left flex items-center justify-between text-sm sm:text-base disabled:opacity-50"
+      >
+        <span className="truncate">
+          {selectedZonales.length === 0 
+            ? 'Seleccionar zonales...'
+            : selectedZonales.length === availableZonales.length
+            ? 'Todas las zonales'
+            : `${selectedZonales.length} zonales seleccionadas`
+          }
+        </span>
+        <svg 
+          className={`w-4 h-4 sm:w-5 sm:h-5 text-slate-500 transform transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+        </svg>
+      </button>
+
+      {/* Dropdown */}
+      {isOpen && (
+        <div className="absolute z-50 w-full mt-2 bg-white rounded-lg sm:rounded-xl border border-slate-200 shadow-xl max-h-64 overflow-hidden">
+          {/* Header con acciones */}
+          <div className="p-3 border-b border-slate-200 bg-slate-50">
+            <div className="flex justify-between items-center text-xs sm:text-sm">
+              <span className="font-semibold text-slate-700">
+                {availableZonales.length} zonales disponibles
+              </span>
+              <div className="flex space-x-2">
+                <button
+                  onClick={selectAll}
+                  className="px-2 py-1 text-blue-600 hover:bg-blue-100 rounded transition-colors"
+                >
+                  Todas
+                </button>
+                <button
+                  onClick={clearAll}
+                  className="px-2 py-1 text-red-600 hover:bg-red-100 rounded transition-colors"
+                >
+                  Ninguna
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Lista de opciones */}
+          <div className="max-h-48 overflow-y-auto">
+            {availableZonales.map((zonal) => (
+              <div
+                key={zonal}
+                onClick={() => toggleZonal(zonal)}
+                className="flex items-center px-3 py-2 hover:bg-slate-50 cursor-pointer transition-colors"
+              >
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={selectedZonales.includes(zonal)}
+                    onChange={() => {}} // Manejado por el onClick del div
+                    className="w-4 h-4 text-emerald-600 bg-slate-100 border-slate-300 rounded focus:ring-emerald-500 focus:ring-2"
+                  />
+                  <label className="ml-3 text-sm text-slate-700 cursor-pointer select-none">
+                    {zonal}
+                  </label>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Overlay para cerrar el dropdown */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 z-40" 
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+    </div>
+  );
+};
+
+// Panel de filtros mejorado con selector múltiple de zonales - RESPONSIVO
 const FiltersPanel = ({ 
   filters, 
   onFiltersChange, 
@@ -201,7 +320,7 @@ const FiltersPanel = ({
           />
         </div>
 
-        {/* ZONAL */}
+        {/* ZONAL - SELECTOR MÚLTIPLE */}
         <div className="space-y-2 sm:space-y-3">
           <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
             <div className="p-1 bg-emerald-100 rounded">
@@ -209,25 +328,20 @@ const FiltersPanel = ({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
               </svg>
             </div>
-            <span className="text-xs sm:text-sm">Zonal</span>
+            <span className="text-xs sm:text-sm">Zonales</span>
             <span className="text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full bg-green-100 text-green-700 font-medium">
-              {zonales.length}
+              {filters.zonales?.length || 0}/{zonales.length}
             </span>
           </label>
-          <select
-            value={filters.zonal || ''}
-            onChange={(e) => onFiltersChange({ 
+          <MultiSelectZonal
+            selectedZonales={filters.zonales || []}
+            availableZonales={zonales}
+            onChange={(selectedZonales) => onFiltersChange({ 
               ...filters, 
-              zonal: e.target.value || undefined
+              zonales: selectedZonales.length > 0 ? selectedZonales : undefined 
             })}
-            className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-slate-200 rounded-lg sm:rounded-xl focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all duration-200 bg-white text-sm sm:text-base"
-            disabled={loading || zonales.length === 0}
-          >
-            <option value="">Todas las zonales</option>
-            {zonales.map((zonal) => (
-              <option key={zonal} value={zonal}>{zonal}</option>
-            ))}
-          </select>
+            loading={loading}
+          />
         </div>
 
         {/* SUPERVISOR */}
@@ -261,7 +375,7 @@ const FiltersPanel = ({
       </div>
 
       {/* Indicador de filtros activos - RESPONSIVO */}
-      {(filters.zonal || filters.supervisor || filters.fecha) && (
+      {(filters.zonales?.length || filters.supervisor || filters.fecha) && (
         <div className="mt-4 p-3 sm:p-4 bg-blue-50 rounded-lg sm:rounded-xl border border-blue-200">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
             <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
@@ -277,9 +391,9 @@ const FiltersPanel = ({
                     📅 {filters.fecha}
                   </span>
                 )}
-                {filters.zonal && (
+                {filters.zonales && filters.zonales.length > 0 && (
                   <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
-                    📍 {filters.zonal}
+                    📍 {filters.zonales.length === 1 ? filters.zonales[0] : `${filters.zonales.length} zonales`}
                   </span>
                 )}
                 {filters.supervisor && (
@@ -517,6 +631,34 @@ const ExecutiveMetrics = ({ data }: { data: VendedorVentaResumen[] }) => {
 const ExecutiveTable = ({ data, loading }: { data: VendedorVentaResumen[], loading: boolean }) => {
   const [showMobileCards, setShowMobileCards] = useState(false);
 
+  // Cálculo de totales
+  const totals = useMemo(() => {
+    if (data.length === 0) return null;
+    
+    const totalQvdd = data.reduce((sum, item) => sum + (item.qvdd || 0), 0);
+    const totalQvddComis = data.reduce((sum, item) => sum + (item.qvdd_comis || 0), 0);
+    const totalQvddPlan = data.reduce((sum, item) => sum + (item.qvdd_plan || 0), 0);
+    const totalVendedoresConVentas = data.reduce((sum, item) => sum + (item.vendedores_con_ventas || 0), 0);
+    const totalVentas = data.reduce((sum, item) => sum + (item.pedidos_distintos || 0), 0);
+    const totalCuotaDiaria = data.reduce((sum, item) => sum + (item.cuota_diaria || 0), 0);
+    
+    // Cálculos corregidos según especificaciones
+    const porcentajeHcTotal = totalQvdd > 0 ? (totalVendedoresConVentas / totalQvdd) * 100 : 0;
+    const porcentajeCoberturaTotal = totalCuotaDiaria > 0 ? (totalVentas / totalCuotaDiaria) * 100 : 0;
+    
+    return {
+      cantidadSupervisores: data.length,
+      totalQvdd,
+      totalQvddComis,
+      totalQvddPlan,
+      totalVendedoresConVentas,
+      totalVentas,
+      totalCuotaDiaria,
+      porcentajeHcTotal,
+      porcentajeCoberturaTotal
+    };
+  }, [data]);
+
   if (loading) {
     return (
       <div className="bg-white rounded-xl sm:rounded-2xl border border-slate-200 shadow-xl">
@@ -544,7 +686,7 @@ const ExecutiveTable = ({ data, loading }: { data: VendedorVentaResumen[], loadi
       <div className="p-4 sm:p-6 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-blue-50">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-2 sm:space-y-0">
           <div>
-            <h2 className="text-lg sm:text-2xl font-bold text-slate-800 mb-1">Análisis Detallado por Supervisor</h2>
+            <h2 className="text-lg sm:text-2xl font-bold text-slate-800 mb-1">Reporte Supervisores</h2>
             <p className="text-slate-600 text-sm sm:text-base">{data.length} registros encontrados</p>
           </div>
           
@@ -637,6 +779,48 @@ const ExecutiveTable = ({ data, loading }: { data: VendedorVentaResumen[], loadi
               </div>
             );
           })}
+          
+          {/* Tarjeta de totales para vista móvil */}
+          {totals && (
+            <div className="p-4 rounded-lg border-2 border-yellow-400 bg-gradient-to-r from-slate-600 to-slate-700 text-white shadow-lg">
+              <div className="flex items-center mb-3">
+                <svg className="w-5 h-5 mr-2 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 002 2z"></path>
+                </svg>
+                <h3 className="font-bold text-lg">TOTALES</h3>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3 mb-3">
+                <div className="bg-yellow-400 bg-opacity-20 p-2 rounded">
+                  <p className="text-xs text-yellow-200">Supervisores</p>
+                  <p className="font-bold text-yellow-400">{totals.cantidadSupervisores}</p>
+                </div>
+                <div className="bg-yellow-400 bg-opacity-20 p-2 rounded">
+                  <p className="text-xs text-yellow-200">Total QVDD</p>
+                  <p className="font-bold text-yellow-400">{totals.totalQvdd.toLocaleString()}</p>
+                </div>
+                <div className="bg-blue-400 bg-opacity-20 p-2 rounded">
+                  <p className="text-xs text-blue-200">HC-Venta</p>
+                  <p className="font-bold text-blue-400">{totals.totalVendedoresConVentas.toLocaleString()}</p>
+                </div>
+                <div className="bg-green-400 bg-opacity-20 p-2 rounded">
+                  <p className="text-xs text-green-200">Ventas</p>
+                  <p className="font-bold text-green-400">{totals.totalVentas.toLocaleString()}</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-purple-400 bg-opacity-20 p-2 rounded text-center">
+                  <p className="text-xs text-purple-200">% HC Total</p>
+                  <p className="font-bold text-purple-400 text-lg">{Math.round(totals.porcentajeHcTotal)}%</p>
+                </div>
+                <div className="bg-emerald-400 bg-opacity-20 p-2 rounded text-center">
+                  <p className="text-xs text-emerald-200">% Cobertura</p>
+                  <p className="font-bold text-emerald-400 text-lg">{Math.round(totals.porcentajeCoberturaTotal)}%</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -676,26 +860,26 @@ const ExecutiveTable = ({ data, loading }: { data: VendedorVentaResumen[], loadi
                   <td className="px-2 sm:px-4 py-3 sm:py-4 font-bold text-slate-900 text-xs sm:text-sm">{item.zonal}</td>
                   <td className="px-2 sm:px-4 py-3 sm:py-4 font-semibold text-slate-700 text-xs sm:text-sm max-w-[120px] sm:max-w-none truncate">{item.supervisor}</td>
                   
-                  <td className="px-2 sm:px-3 py-3 sm:py-4 text-right">
-                    <span className="px-1.5 sm:px-2 py-1 bg-slate-100 text-slate-800 rounded-full text-xs font-semibold">
+                  <td className="px-1 sm:px-3 py-3 sm:py-4 text-right">
+                    <span className="px-1 sm:px-2 py-1 bg-slate-100 text-slate-800 rounded-full text-xs font-semibold">
                       {item.qvdd || 0}
                     </span>
                   </td>
                   
-                  <td className="px-2 sm:px-3 py-3 sm:py-4 text-right hidden md:table-cell">
-                    <span className="px-1.5 sm:px-2 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs font-semibold">
+                  <td className="px-1 sm:px-3 py-3 sm:py-4 text-right hidden md:table-cell">
+                    <span className="px-1 sm:px-2 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs font-semibold">
                       {item.qvdd_comis || 0}
                     </span>
                   </td>
                   
-                  <td className="px-2 sm:px-3 py-3 sm:py-4 text-right hidden lg:table-cell">
-                    <span className="px-1.5 sm:px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-semibold">
+                  <td className="px-1 sm:px-3 py-3 sm:py-4 text-right hidden lg:table-cell">
+                    <span className="px-1 sm:px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-semibold">
                       {item.qvdd_plan || 0}
                     </span>
                   </td>
                   
-                  <td className="px-2 sm:px-3 py-3 sm:py-4 text-right">
-                    <span className={`px-1.5 sm:px-2 py-1 rounded-full text-xs font-semibold ${
+                  <td className="px-1 sm:px-3 py-3 sm:py-4 text-right">
+                    <span className={`px-1 sm:px-2 py-1 rounded-full text-xs font-semibold ${
                       hasNoSales ? 'bg-red-100 text-red-800' :
                       isHighPerformance ? 'bg-green-100 text-green-800' :
                       'bg-blue-100 text-blue-800'
@@ -704,18 +888,20 @@ const ExecutiveTable = ({ data, loading }: { data: VendedorVentaResumen[], loadi
                     </span>
                   </td>
                   
-                  <td className="px-2 sm:px-3 py-3 sm:py-4 text-right hidden sm:table-cell">
-                    <span className="px-1.5 sm:px-2 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-semibold">
+                  <td className="px-1 sm:px-3 py-3 sm:py-4 text-right hidden sm:table-cell">
+                    <span className="px-1 sm:px-2 py-1 bg-emerald-100 text-emerald-800 rounded-full text-xs font-semibold">
                       {item.pedidos_distintos || 0}
                     </span>
                   </td>
                   
-                  <td className="px-2 sm:px-3 py-3 sm:py-4 text-right text-xs font-semibold text-slate-700 hidden xl:table-cell">
-                    {(item.cuota_diaria || 0).toLocaleString()}
+                  <td className="px-1 sm:px-3 py-3 sm:py-4 text-right text-xs font-semibold text-slate-700 hidden xl:table-cell">
+                    <span className="px-1 sm:px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-semibold">
+                      {(item.cuota_diaria || 0).toLocaleString()}
+                    </span>
                   </td>
                   
-                  <td className="px-2 sm:px-3 py-3 sm:py-4 text-right">
-                    <span className={`px-1.5 sm:px-2 py-1 rounded-full text-xs font-bold ${
+                  <td className="px-1 sm:px-3 py-3 sm:py-4 text-right">
+                    <span className={`px-1 sm:px-2 py-1 rounded-full text-xs font-bold ${
                       (item.hc_venta_pct || 0) >= 80 ? 'bg-green-100 text-green-800' :
                       (item.hc_venta_pct || 0) >= 50 ? 'bg-yellow-100 text-yellow-800' :
                       'bg-red-100 text-red-800'
@@ -724,8 +910,8 @@ const ExecutiveTable = ({ data, loading }: { data: VendedorVentaResumen[], loadi
                     </span>
                   </td>
                   
-                  <td className="px-2 sm:px-3 py-3 sm:py-4 text-right hidden md:table-cell">
-                    <span className={`px-1.5 sm:px-2 py-1 rounded-full text-xs font-bold ${
+                  <td className="px-1 sm:px-3 py-3 sm:py-4 text-right hidden md:table-cell">
+                    <span className={`px-1 sm:px-2 py-1 rounded-full text-xs font-bold ${
                       (item.porcentaje_cuota || 0) >= 100 ? 'bg-green-100 text-green-800' :
                       (item.porcentaje_cuota || 0) >= 75 ? 'bg-yellow-100 text-yellow-800' :
                       'bg-red-100 text-red-800'
@@ -756,12 +942,104 @@ const ExecutiveTable = ({ data, loading }: { data: VendedorVentaResumen[], loadi
                 </tr>
               );
             })}
+            
+            {/* FILA DE TOTALES */}
+            {totals && (
+              <tr className="bg-gradient-to-r from-slate-600 to-slate-700 text-white border-t-4 border-yellow-500">
+                {/* Zonal */}
+                <td className="px-2 sm:px-4 py-4 sm:py-5 font-bold text-xs sm:text-sm">
+                  <div className="flex items-center">
+                    <svg className="w-4 h-4 mr-2 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 002 2z"></path>
+                    </svg>
+                    <span className="hidden sm:inline">TOTALES</span>
+                    <span className="sm:hidden">TOT</span>
+                  </div>
+                </td>
+                
+                {/* Supervisor - Cantidad */}
+                <td className="px-2 sm:px-4 py-4 sm:py-5 font-bold text-xs sm:text-sm">
+                  <span className="hidden sm:inline">{totals.cantidadSupervisores} supervisores</span>
+                  <span className="sm:hidden">{totals.cantidadSupervisores} sup.</span>
+                </td>
+                
+                {/* QVDD - SUMA */}
+                <td className="px-1 sm:px-3 py-4 sm:py-5 text-right">
+                  <span className="px-1 sm:px-2 py-1 bg-yellow-400 text-slate-900 rounded-full text-xs font-bold">
+                    {totals.totalQvdd.toLocaleString()}
+                  </span>
+                </td>
+                
+                {/* QVDD Comis - SUMA */}
+                <td className="px-1 sm:px-3 py-4 sm:py-5 text-right hidden md:table-cell">
+                  <span className="px-1 sm:px-2 py-1 bg-yellow-400 text-slate-900 rounded-full text-xs font-bold">
+                    {totals.totalQvddComis.toLocaleString()}
+                  </span>
+                </td>
+                
+                {/* QVDD Plan - SUMA */}
+                <td className="px-1 sm:px-3 py-4 sm:py-5 text-right hidden lg:table-cell">
+                  <span className="px-1 sm:px-2 py-1 bg-yellow-400 text-slate-900 rounded-full text-xs font-bold">
+                    {totals.totalQvddPlan.toLocaleString()}
+                  </span>
+                </td>
+                
+                {/* HC-Venta - SUMA */}
+                <td className="px-1 sm:px-3 py-4 sm:py-5 text-right">
+                  <span className="px-1 sm:px-2 py-1 bg-yellow-400 text-slate-900 rounded-full text-xs font-bold">
+                    {totals.totalVendedoresConVentas.toLocaleString()}
+                  </span>
+                </td>
+                
+                {/* Ventas - SUMA */}
+                <td className="px-1 sm:px-3 py-4 sm:py-5 text-right hidden sm:table-cell">
+                  <span className="px-1 sm:px-2 py-1 bg-yellow-400 text-slate-900 rounded-full text-xs font-bold">
+                    {totals.totalVentas.toLocaleString()}
+                  </span>
+                </td>
+                
+                {/* Cuota - SUMA */}
+                <td className="px-1 sm:px-3 py-4 sm:py-5 text-right text-xs font-bold hidden xl:table-cell">
+                  <span className="px-1 sm:px-2 py-1 bg-yellow-400 text-slate-900 rounded-full text-xs font-bold">
+                    {totals.totalCuotaDiaria.toLocaleString()}
+                  </span>
+                </td>
+                
+                {/* % HC - CÁLCULO CORREGIDO: (total vendedores con ventas / total qvdd) * 100 */}
+                <td className="px-1 sm:px-3 py-4 sm:py-5 text-right">
+                  <span className="px-1 sm:px-2 py-1 bg-blue-400 text-slate-900 rounded-full text-xs font-bold">
+                    {Math.round(totals.porcentajeHcTotal)}%
+                  </span>
+                </td>
+                
+                {/* % Cobertura - CÁLCULO CORREGIDO: (total ventas / total cuota diaria) * 100 */}
+                <td className="px-1 sm:px-3 py-4 sm:py-5 text-right hidden md:table-cell">
+                  <span className="px-1 sm:px-2 py-1 bg-green-400 text-slate-900 rounded-full text-xs font-bold">
+                    {Math.round(totals.porcentajeCoberturaTotal)}%
+                  </span>
+                </td>
+                
+                {/* Comentarios - Resumen */}
+                <td className="px-2 sm:px-4 py-4 sm:py-5 hidden lg:table-cell">
+                  <div className="text-xs">
+                    <div className="flex items-center text-yellow-400">
+                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                      </svg>
+                      <span className="hidden xl:inline">Resumen de {totals.cantidadSupervisores} supervisores</span>
+                      <span className="xl:hidden">Resumen {totals.cantidadSupervisores} sup.</span>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
     </div>
   );
 };
+
 
 // Componente principal del informe ejecutivo mejorado - RESPONSIVO
 export default function InformeGerenciaPage() {
@@ -776,25 +1054,28 @@ export default function InformeGerenciaPage() {
   const [loadingSupervisores, setLoadingSupervisores] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Datos filtrados y procesados
+  // Datos filtrados y procesados - ACTUALIZADO para múltiples zonales
   const { filteredData, zonales, supervisores } = useMemo(() => {
     const zonalesSet = new Set(allData.map(item => item.zonal).filter(Boolean));
     const zonalesArray = Array.from(zonalesSet).sort();
 
-    // Supervisores de la zonal seleccionada (para compatibilidad)
-    const supervisoresArray = filters.zonal 
+    // Supervisores de las zonales seleccionadas (para compatibilidad)
+    const supervisoresArray = filters.zonales && filters.zonales.length > 0
       ? Array.from(new Set(
           allData
-            .filter(item => item.zonal === filters.zonal)
+            .filter(item => filters.zonales!.includes(item.zonal))
             .map(item => item.supervisor)
             .filter(Boolean)
         )).sort()
       : [];
 
     let filteredResult = allData;
-    if (filters.zonal) {
-      filteredResult = filteredResult.filter(item => item.zonal === filters.zonal);
+    
+    // Filtrar por múltiples zonales
+    if (filters.zonales && filters.zonales.length > 0) {
+      filteredResult = filteredResult.filter(item => filters.zonales!.includes(item.zonal));
     }
+    
     if (filters.supervisor) {
       filteredResult = filteredResult.filter(item => item.supervisor === filters.supervisor);
     }
@@ -804,7 +1085,7 @@ export default function InformeGerenciaPage() {
       zonales: zonalesArray,
       supervisores: supervisoresArray
     };
-  }, [allData, filters.zonal, filters.supervisor]);
+  }, [allData, filters.zonales, filters.supervisor]);
 
   // ✅ NUEVA FUNCIÓN: Cargar lista de supervisores usando FeedbackService
   const loadSupervisores = async (fecha?: string) => {
@@ -904,7 +1185,7 @@ export default function InformeGerenciaPage() {
     loadSupervisores(filters.fecha);
   };
 
-  // Exportar informe usando la nueva función
+  // Exportar informe usando la nueva función - ACTUALIZADO para múltiples zonales
   const exportReport = async () => {
     try {
       console.log('📊 Exportando informe...', {
@@ -913,9 +1194,11 @@ export default function InformeGerenciaPage() {
       });
       
       const fecha = filters.fecha || 'todas_fechas';
-      const zonal = filters.zonal || 'todas_zonales';
+      const zonales = filters.zonales && filters.zonales.length > 0 
+        ? filters.zonales.join('_') 
+        : 'todas_zonales';
       const supervisor = filters.supervisor || 'todos_supervisores';
-      const filename = `informe_gerencia_${fecha}_${zonal}_${supervisor}`;
+      const filename = `informe_gerencia_${fecha}_${zonales}_${supervisor}`;
       
       exportToExcel(filteredData, filename);
       
