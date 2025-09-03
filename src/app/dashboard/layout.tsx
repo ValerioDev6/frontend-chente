@@ -63,7 +63,7 @@ const ProtectedLayoutWrapper = ({ children }: { children: React.ReactNode }) => 
         
         <div className="space-y-2">
           <h3 className="text-white text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-            Canal Fija Auren
+            FIJA NET
           </h3>
           <p className="text-slate-300 text-sm sm:text-base font-medium animate-pulse">
             Verificando sesión...
@@ -148,7 +148,7 @@ const ProtectedLayoutWrapper = ({ children }: { children: React.ReactNode }) => 
               </svg>
             </div>
             <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-white tracking-tight">
-              Canal Fija <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">Auren</span>
+              FIJA <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">NET</span>
             </h1>
           </div>
 
@@ -234,14 +234,14 @@ const ProtectedLayoutWrapper = ({ children }: { children: React.ReactNode }) => 
     <footer className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-t border-slate-700/50 backdrop-blur-sm">
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
-          <div className="flex items-center space-x-2">
+          {/* <div className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">
               <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
               </svg>
             </div>
-            <span className="text-slate-300 text-sm font-medium">Canal Fija Auren</span>
-          </div>
+            <span className="text-slate-300 text-sm font-medium">FIJA-NET</span> 
+          </div> */}
           
           <div className="text-center">
             <p className="text-slate-400 text-sm">
