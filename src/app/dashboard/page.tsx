@@ -32,15 +32,27 @@ const dashboardOptions = [
   },
   {
     id: 'supervisores',
-    title: 'Supervisores',
-    subtitle: 'Gestión de equipos y personal',
-    description: 'Gestiona  y válida los ingresos de ventas regulares al Contorlnet.',
+    title: 'Peticiones',
+    subtitle: 'Gestión de peticiones',
+    description: 'Gestiona  y válida los peticiones regulares  ingresadas al Controlnet.',
     icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z',
     route: '/dashboard/supervisores',
     gradient: 'from-purple-500 to-indigo-600',
     bgGradient: 'from-purple-50/80 via-indigo-50/60 to-purple-100/80',
     borderColor: 'border-purple-200/60',
     hoverShadow: 'hover:shadow-purple-500/20'
+  },
+  {
+    id: 'vendedores',
+    title: 'Vendedores',
+    subtitle: 'Gestión de equipos y personal',
+    description: 'Gestiona y válida las ventas del día por vendedor al Controlnet, envía whatsapp a tus vendedores.',
+    icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z',
+    route: '/dashboard/vendedores',
+    gradient: 'from-orange-500 to-red-500',
+    bgGradient: 'from-orange-50/80 via-red-50/60 to-orange-100/80',
+    borderColor: 'border-orange-200/60',
+    hoverShadow: 'hover:shadow-orange-500/20'
   }
 ];
 

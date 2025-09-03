@@ -419,7 +419,7 @@ const EditarFeedbackModal = ({
 
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-2">
-                Retroalimentación Cierre de Ventas
+                Comentarios Cierre de Ventas
               </label>
               <textarea
                 value={formData.comentarios_jefe || ''}
@@ -795,7 +795,7 @@ export default function SeguimientoPage() {
                         <div className="flex justify-between items-start mb-3">
                           <div className="flex-1 min-w-0">
                             <h3 className="font-bold text-slate-900 truncate">{item.supervisor}</h3>
-                            <p className="text-xs text-slate-500">ID: {item.id}</p>
+                            {/* <p className="text-xs text-slate-500">ID: {item.id}</p> */}
                           </div>
                           <button
                             onClick={() => setEditingFeedback(item)}
@@ -830,7 +830,7 @@ export default function SeguimientoPage() {
                           </div>
                           
                           <div className="flex items-center justify-between">
-                            <span className="text-slate-600">C. Sup 0:</span>
+                            <span className="text-slate-600">Evaluación:</span>
                             {item.comentarios_supervisor && item.comentarios_supervisor.trim() ? (
                               <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium">Sí</span>
                             ) : (
@@ -839,7 +839,7 @@ export default function SeguimientoPage() {
                           </div>
                           
                           <div className="flex items-center justify-between">
-                            <span className="text-slate-600">C. Sup 1:</span>
+                            <span className="text-slate-600">Cierre:</span>
                             {item.comentarios_jefe && item.comentarios_jefe.trim() ? (
                               <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium">Sí</span>
                             ) : (
@@ -861,8 +861,8 @@ export default function SeguimientoPage() {
                       <th className="px-4 py-3 text-left text-xs font-bold text-slate-600 uppercase tracking-wider">Supervisor</th>
                       <th className="px-3 py-3 text-right text-xs font-bold text-slate-600 uppercase tracking-wider">Cuota</th>
                       <th className="px-3 py-3 text-center text-xs font-bold text-slate-600 uppercase tracking-wider">Cumpl.</th>
-                      <th className="px-3 py-3 text-center text-xs font-bold text-slate-600 uppercase tracking-wider">C. Sup. 0</th>
-                      <th className="px-3 py-3 text-center text-xs font-bold text-slate-600 uppercase tracking-wider">C. Sup. 1</th>
+                      <th className="px-3 py-3 text-center text-xs font-bold text-slate-600 uppercase tracking-wider">Evaluación</th>
+                      <th className="px-3 py-3 text-center text-xs font-bold text-slate-600 uppercase tracking-wider">Cierre</th>
                       <th className="px-3 py-3 text-center text-xs font-bold text-slate-600 uppercase tracking-wider">Acciones</th>
                     </tr>
                   </thead>
@@ -879,7 +879,7 @@ export default function SeguimientoPage() {
                         >
                           <td className="px-4 py-3">
                             <div className="font-bold text-slate-900">{item.supervisor}</div>
-                            <div className="text-xs text-slate-500">ID: {item.id}</div>
+                            {/* <div className="text-xs text-slate-500">ID: {item.id}</div> */}
                           </td>
 
                           <td className="px-3 py-3 text-right">
@@ -1037,7 +1037,7 @@ export default function SeguimientoPage() {
               
               <div className="text-center">
                 <div className="p-2 sm:p-3 bg-white rounded-lg shadow-sm">
-                  <p className="text-slate-600 font-medium mb-1 text-xs sm:text-sm">Com. Inicial</p>
+                  <p className="text-slate-600 font-medium mb-1 text-xs sm:text-sm">Evaluación</p>
                   <p className="text-lg sm:text-2xl font-bold text-purple-600">{stats.conComentariosSup}</p>
                   <p className="text-xs text-slate-500">
                     {stats.total > 0 ? Math.round((stats.conComentariosSup / stats.total) * 100) : 0}%
@@ -1047,7 +1047,7 @@ export default function SeguimientoPage() {
               
               <div className="text-center">
                 <div className="p-2 sm:p-3 bg-white rounded-lg shadow-sm">
-                  <p className="text-slate-600 font-medium mb-1 text-xs sm:text-sm">Retroalimentación</p>
+                  <p className="text-slate-600 font-medium mb-1 text-xs sm:text-sm">Cierre</p>
                   <p className="text-lg sm:text-2xl font-bold text-orange-600">{stats.conComentariosJefe}</p>
                   <p className="text-xs text-slate-500">
                     {stats.total > 0 ? Math.round((stats.conComentariosJefe / stats.total) * 100) : 0}%
