@@ -16,8 +16,10 @@ import {
 
 interface FrontendFilters {
   fecha?: string;
-  zonales?: string[]; // Cambio: ahora es un array para múltiples zonales
+  zonales?: string[]; 
   supervisor?: string;
+  // ✅ ACTUALIZADO: Filtro simplificado de comentarios
+  tipoComentario?: 'todos' | 'evaluacion' | 'cierre';
 }
 
 // Función para exportar a Excel con formato específico
@@ -126,6 +128,28 @@ const DataLoadingSpinner = ({ text = "Cargando datos..." }: { text?: string }) =
     <p className="text-slate-600 font-medium text-sm sm:text-base">{text}</p>
   </div>
 );
+
+// ✅ ACTUALIZADO: Función simplificada para filtrar datos por tipo de comentario
+const filterByCommentType = (data: VendedorVentaResumen[], tipoComentario?: string): VendedorVentaResumen[] => {
+  if (!tipoComentario || tipoComentario === 'todos') {
+    return data;
+  }
+
+  return data.filter(item => {
+    switch (tipoComentario) {
+      case 'evaluacion':
+        // Solo registros que tengan comentarios_supervisor (con contenido o vacío) pero NO comentarios_jefe
+        return (item.comentarios_supervisor !== undefined && item.comentarios_supervisor !== null) && 
+               (item.comentarios_jefe === undefined || item.comentarios_jefe === null || item.comentarios_jefe === '');
+      case 'cierre':
+        // Solo registros que tengan comentarios_jefe (con contenido o vacío) pero NO comentarios_supervisor
+        return (item.comentarios_jefe !== undefined && item.comentarios_jefe !== null) && 
+               (item.comentarios_supervisor === undefined || item.comentarios_supervisor === null || item.comentarios_supervisor === '');
+      default:
+        return true;
+    }
+  });
+};
 
 // Componente para el selector múltiple de zonales
 const MultiSelectZonal = ({ 
@@ -246,7 +270,7 @@ const MultiSelectZonal = ({
   );
 };
 
-// Panel de filtros mejorado con selector múltiple de zonales - RESPONSIVO
+// ✅ ACTUALIZADO: Panel de filtros con opciones simplificadas de comentarios
 const FiltersPanel = ({ 
   filters, 
   onFiltersChange, 
@@ -297,7 +321,8 @@ const FiltersPanel = ({
         </button>
       </div>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        
         {/* FECHA */}
         <div className="space-y-2 sm:space-y-3">
           <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
@@ -345,7 +370,7 @@ const FiltersPanel = ({
         </div>
 
         {/* SUPERVISOR */}
-        <div className="space-y-2 sm:space-y-3 sm:col-span-2 lg:col-span-1">
+        <div className="space-y-2 sm:space-y-3">
           <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
             <div className="p-1 bg-purple-100 rounded">
               <svg className="w-3 h-3 sm:w-4 sm:h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -372,10 +397,35 @@ const FiltersPanel = ({
             ))}
           </select>
         </div>
+
+        {/* ✅ ACTUALIZADO: FILTRO DE COMENTARIOS SIMPLIFICADO */}
+        <div className="space-y-2 sm:space-y-3">
+          <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
+            <div className="p-1 bg-orange-100 rounded">
+              <svg className="w-3 h-3 sm:w-4 sm:h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+              </svg>
+            </div>
+            <span className="text-xs sm:text-sm">Comentarios</span>
+          </label>
+          <select
+            value={filters.tipoComentario || 'todos'}
+            onChange={(e) => onFiltersChange({ 
+              ...filters, 
+              tipoComentario: e.target.value as 'todos' | 'evaluacion' | 'cierre'
+            })}
+            className="w-full px-3 sm:px-4 py-2 sm:py-3 border-2 border-slate-200 rounded-lg sm:rounded-xl focus:ring-4 focus:ring-orange-500/20 focus:border-orange-500 transition-all duration-200 bg-white text-sm sm:text-base"
+            disabled={loading}
+          >
+            <option value="todos">Todos los registros</option>
+            <option value="evaluacion">Evaluación</option>
+            <option value="cierre">Cierre</option>
+          </select>
+        </div>
       </div>
 
-      {/* Indicador de filtros activos - RESPONSIVO */}
-      {(filters.zonales?.length || filters.supervisor || filters.fecha) && (
+      {/* ✅ ACTUALIZADO: Indicador de filtros activos con opciones simplificadas */}
+      {(filters.zonales?.length || filters.supervisor || filters.fecha || (filters.tipoComentario && filters.tipoComentario !== 'todos')) && (
         <div className="mt-4 p-3 sm:p-4 bg-blue-50 rounded-lg sm:rounded-xl border border-blue-200">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
             <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
@@ -399,6 +449,15 @@ const FiltersPanel = ({
                 {filters.supervisor && (
                   <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">
                     👤 {filters.supervisor}
+                  </span>
+                )}
+                {filters.tipoComentario && filters.tipoComentario !== 'todos' && (
+                  <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded-full">
+                    💬 {
+                      filters.tipoComentario === 'evaluacion' ? 'Evaluación' :
+                      filters.tipoComentario === 'cierre' ? 'Cierre' :
+                      filters.tipoComentario
+                    }
                   </span>
                 )}
               </div>
@@ -1040,7 +1099,6 @@ const ExecutiveTable = ({ data, loading }: { data: VendedorVentaResumen[], loadi
   );
 };
 
-
 // Componente principal del informe ejecutivo mejorado - RESPONSIVO
 export default function InformeGerenciaPage() {
   const { user, logout } = useAuth();
@@ -1054,12 +1112,11 @@ export default function InformeGerenciaPage() {
   const [loadingSupervisores, setLoadingSupervisores] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Datos filtrados y procesados - ACTUALIZADO para múltiples zonales
+  // Datos filtrados y procesados - ACTUALIZADO para múltiples zonales y filtro simplificado
   const { filteredData, zonales, supervisores } = useMemo(() => {
     const zonalesSet = new Set(allData.map(item => item.zonal).filter(Boolean));
     const zonalesArray = Array.from(zonalesSet).sort();
 
-    // Supervisores de las zonales seleccionadas (para compatibilidad)
     const supervisoresArray = filters.zonales && filters.zonales.length > 0
       ? Array.from(new Set(
           allData
@@ -1080,14 +1137,17 @@ export default function InformeGerenciaPage() {
       filteredResult = filteredResult.filter(item => item.supervisor === filters.supervisor);
     }
 
+    // ✅ ACTUALIZADO: Aplicar filtro simplificado de comentarios
+    filteredResult = filterByCommentType(filteredResult, filters.tipoComentario);
+
     return {
       filteredData: filteredResult,
       zonales: zonalesArray,
       supervisores: supervisoresArray
     };
-  }, [allData, filters.zonales, filters.supervisor]);
+  }, [allData, filters.zonales, filters.supervisor, filters.tipoComentario]);
 
-  // ✅ NUEVA FUNCIÓN: Cargar lista de supervisores usando FeedbackService
+  // Cargar lista de supervisores usando FeedbackService
   const loadSupervisores = async (fecha?: string) => {
     setLoadingSupervisores(true);
     try {
@@ -1198,7 +1258,11 @@ export default function InformeGerenciaPage() {
         ? filters.zonales.join('_') 
         : 'todas_zonales';
       const supervisor = filters.supervisor || 'todos_supervisores';
-      const filename = `informe_gerencia_${fecha}_${zonales}_${supervisor}`;
+      const comentarios = filters.tipoComentario && filters.tipoComentario !== 'todos' 
+        ? filters.tipoComentario 
+        : 'todos_comentarios';
+      
+      const filename = `informe_gerencia_${fecha}_${zonales}_${supervisor}_${comentarios}`;
       
       exportToExcel(filteredData, filename);
       
