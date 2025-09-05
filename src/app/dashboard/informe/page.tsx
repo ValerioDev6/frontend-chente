@@ -839,9 +839,14 @@ const ExecutiveTable = ({ data, loading }: { data: VendedorVentaResumen[], loadi
             );
           })}
           
-          {/* Tarjeta de totales para vista móvil */}
+          {/* Tarjeta de totales para vista móvil - USANDO LOS MISMOS TOTALES QUE LA TABLA */}
           {totals && (
             <div className="p-4 rounded-lg border-2 border-yellow-400 bg-gradient-to-r from-slate-600 to-slate-700 text-white shadow-lg">
+              {/* DEBUG - BORRA ESTO DESPUÉS */}
+              <div className="text-xs text-red-300 mb-2">
+                {/* DEBUG: Supervisores={totals.cantidadSupervisores}, QVDD={totals.totalQvdd}, HC-Venta={totals.totalVendedoresConVentas} */}
+              </div>
+              
               <div className="flex items-center mb-3">
                 <svg className="w-5 h-5 mr-2 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 002 2z"></path>
@@ -849,33 +854,34 @@ const ExecutiveTable = ({ data, loading }: { data: VendedorVentaResumen[], loadi
                 <h3 className="font-bold text-lg">TOTALES</h3>
               </div>
               
+              {/* VERSIÓN CON MEJOR CONTRASTE */}
               <div className="grid grid-cols-2 gap-3 mb-3">
-                <div className="bg-yellow-400 bg-opacity-20 p-2 rounded">
-                  <p className="text-xs text-yellow-200">Supervisores</p>
-                  <p className="font-bold text-yellow-400">{totals.cantidadSupervisores}</p>
+                <div className="bg-slate-800 border border-yellow-400 p-2 rounded">
+                  <p className="text-xs text-yellow-300">Supervisores</p>
+                  <p className="font-bold text-white text-lg">{totals.cantidadSupervisores}</p>
                 </div>
-                <div className="bg-yellow-400 bg-opacity-20 p-2 rounded">
-                  <p className="text-xs text-yellow-200">Total QVDD</p>
-                  <p className="font-bold text-yellow-400">{totals.totalQvdd.toLocaleString()}</p>
+                <div className="bg-slate-800 border border-blue-400 p-2 rounded">
+                  <p className="text-xs text-blue-300">Total QVDD</p>
+                  <p className="font-bold text-white text-lg">{totals.totalQvdd.toLocaleString()}</p>
                 </div>
-                <div className="bg-blue-400 bg-opacity-20 p-2 rounded">
-                  <p className="text-xs text-blue-200">HC-Venta</p>
-                  <p className="font-bold text-blue-400">{totals.totalVendedoresConVentas.toLocaleString()}</p>
+                <div className="bg-slate-800 border border-green-400 p-2 rounded">
+                  <p className="text-xs text-green-300">HC-Venta</p>
+                  <p className="font-bold text-white text-lg">{totals.totalVendedoresConVentas.toLocaleString()}</p>
                 </div>
-                <div className="bg-green-400 bg-opacity-20 p-2 rounded">
-                  <p className="text-xs text-green-200">Ventas</p>
-                  <p className="font-bold text-green-400">{totals.totalVentas.toLocaleString()}</p>
+                <div className="bg-slate-800 border border-emerald-400 p-2 rounded">
+                  <p className="text-xs text-emerald-300">Ventas</p>
+                  <p className="font-bold text-white text-lg">{totals.totalVentas.toLocaleString()}</p>
                 </div>
               </div>
               
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-purple-400 bg-opacity-20 p-2 rounded text-center">
                   <p className="text-xs text-purple-200">% HC Total</p>
-                  <p className="font-bold text-purple-400 text-lg">{Math.round(totals.porcentajeHcTotal)}%</p>
+                  <p className="font-bold text-white  text-lg">{Math.round(totals.porcentajeHcTotal)}%</p>
                 </div>
                 <div className="bg-emerald-400 bg-opacity-20 p-2 rounded text-center">
                   <p className="text-xs text-emerald-200">% Cobertura</p>
-                  <p className="font-bold text-emerald-400 text-lg">{Math.round(totals.porcentajeCoberturaTotal)}%</p>
+                  <p className="font-bold text-white  text-lg">{Math.round(totals.porcentajeCoberturaTotal)}%</p>
                 </div>
               </div>
             </div>
