@@ -765,8 +765,8 @@ const ExecutiveTable = ({ data, loading }: { data: VendedorVentaResumen[], loadi
       <div className={`${showMobileCards ? 'block' : 'hidden'} sm:hidden`}>
         <div className="p-4 space-y-4">
           {data.map((item, index) => {
-            const isLowPerformance = (item.hc_venta_pct || 0) < 50;
-            const isHighPerformance = (item.hc_venta_pct || 0) >= 80;
+            const isLowPerformance = (item.hc_venta_pct || 0) < 29;
+            const isHighPerformance = (item.hc_venta_pct || 0) >= 40;
             const hasNoSales = (item.vendedores_con_ventas || 0) === 0;
             
             return (
@@ -787,8 +787,8 @@ const ExecutiveTable = ({ data, loading }: { data: VendedorVentaResumen[], loadi
                   </div>
                   <div className="text-right">
                     <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                      (item.hc_venta_pct || 0) >= 80 ? 'bg-green-100 text-green-800' :
-                      (item.hc_venta_pct || 0) >= 50 ? 'bg-yellow-100 text-yellow-800' :
+                      (item.hc_venta_pct || 0) >= 40 ? 'bg-green-100 text-green-800' :
+                      (item.hc_venta_pct || 0) >= 30 ? 'bg-yellow-100 text-yellow-800' :
                       'bg-red-100 text-red-800'
                     }`}>
                       {Math.round(item.hc_venta_pct || 0)}% HC
@@ -909,8 +909,8 @@ const ExecutiveTable = ({ data, loading }: { data: VendedorVentaResumen[], loadi
           </thead>
           <tbody className="divide-y divide-slate-200">
             {data.map((item, index) => {
-              const isLowPerformance = (item.hc_venta_pct || 0) < 50;
-              const isHighPerformance = (item.hc_venta_pct || 0) >= 80;
+              const isLowPerformance = (item.hc_venta_pct || 0) < 29;
+              const isHighPerformance = (item.hc_venta_pct || 0) >= 40;
               const hasNoSales = (item.vendedores_con_ventas || 0) === 0;
               
               return (
@@ -967,8 +967,8 @@ const ExecutiveTable = ({ data, loading }: { data: VendedorVentaResumen[], loadi
                   
                   <td className="px-1 sm:px-3 py-3 sm:py-4 text-right">
                     <span className={`px-1 sm:px-2 py-1 rounded-full text-xs font-bold ${
-                      (item.hc_venta_pct || 0) >= 80 ? 'bg-green-100 text-green-800' :
-                      (item.hc_venta_pct || 0) >= 50 ? 'bg-yellow-100 text-yellow-800' :
+                      (item.hc_venta_pct || 0) >= 40 ? 'bg-green-100 text-green-800' :
+                      (item.hc_venta_pct || 0) >= 30 ? 'bg-yellow-100 text-yellow-800' :
                       'bg-red-100 text-red-800'
                     }`}>
                       {Math.round(item.hc_venta_pct || 0)}%
